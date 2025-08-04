@@ -8,31 +8,27 @@ apt install -y build-essential git curl wget python3 python3-pip openjdk-17-jre-
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 apt install -y nodejs
 
-# 4. Create a user for MineOS
-adduser --disabled-login mineos
+# 4. (In Codespaces: skip creating a new user, install directly instead)
+# adduser --disabled-login mineos
+# su - mineos
 
-# 5. Switch to that user
-su - mineos
+# 5. Clone the MineOS Node web UI
+git clone https://github.com/hexparrot/mineos-node.git /opt/mineos-node
 
-# 6. Clone the MineOS Node web UI
-git clone https://github.com/hexparrot/mineos-node.git
+# 6. Enter the folder
+cd /opt/mineos-node
 
-# 7. Enter the folder
-cd mineos-node
-
-# 8. Install Node.js dependencies
+# 7. Install Node.js dependencies
 npm install
 
-# 9. Build the web UI
+# 8. Build the web UI
 npm run build
 
-# 10. Exit back to root
-exit
+# 9. (In a real VPS/server, you'd do:)
+# cp /home/mineos/mineos-node/mineos.service /etc/systemd/system/
+# systemctl daemon-reexec
+# systemctl enable mineos
+# systemctl start mineos
 
-# 11. Setup systemd service
-cp /home/mineos/mineos-node/mineos.service /etc/systemd/system/
-
-# 12. Enable and start MineOS
-systemctl daemon-reexec
-systemctl enable mineos
-systemctl start mineos
+# 10. But in Codespaces/systemd-less environments, start manually:
+node service.js
