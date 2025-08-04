@@ -1,6 +1,3 @@
-#!/bin/bash
-# MineOS install script
-
 # 1. Update your system
 apt update && apt upgrade -y
 
@@ -14,18 +11,28 @@ apt install -y nodejs
 # 4. Create a user for MineOS
 adduser --disabled-login mineos
 
-# 5. Switch to that user and install MineOS
-su - mineos -c "
-  git clone https://github.com/hexparrot/mineos-node.git &&
-  cd mineos-node &&
-  npm install &&
-  npm run build
-"
+# 5. Switch to that user
+su - mineos
 
-# 6. Setup systemd service
+# 6. Clone the MineOS Node web UI
+git clone https://github.com/hexparrot/mineos-node.git
+
+# 7. Enter the folder
+cd mineos-node
+
+# 8. Install Node.js dependencies
+npm install
+
+# 9. Build the web UI
+npm run build
+
+# 10. Exit back to root
+exit
+
+# 11. Setup systemd service
 cp /home/mineos/mineos-node/mineos.service /etc/systemd/system/
 
-# 7. Enable and start MineOS
+# 12. Enable and start MineOS
 systemctl daemon-reexec
 systemctl enable mineos
 systemctl start mineos
