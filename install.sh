@@ -1,39 +1,52 @@
-#!/bin/bash
-
-# 1. Update your system
+# Update your system
 apt update && apt upgrade -y
 
-# 2. Install dependencies
-apt install -y build-essential git curl wget python3 python3-pip openjdk-17-jre-headless
+# Install dependencies
+apt install -y python3 python3-venv python3-pip libffi-dev libssl-dev git
 
-# 3. Install Node.js (LTS version required for MineOS)
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-apt install -y nodejs
+# Create a user for crafty
+useradd -m -s /bin/bash crafty
 
-# 4. Create a user for MineOS
-adduser --disabled-login mineos
+# Switch to crafty user
+sudo -u crafty -i bash <<'EOF'
+cd ~
 
-# 5. Clone MineOS as root
-cd /opt
-git clone https://github.com/hexparrot/mineos-node.git
+# Clone Crafty repo
+git clone https://github.com/crafty-controller/crafty.git
 
-# 6. Change ownership to mineos user
-chown -R mineos:mineos /opt/mineos-node
+cd crafty
 
-# 7. Switch to mineos user and install node dependencies
-sudo -u mineos bash -c "
-  cd /opt/mineos-node
-  npm install
-  npm run build
-"
+# Setup python virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-# 8. Copy and enable systemd service
-cp /opt/mineos-node/mineos.service /etc/systemd/system/
+# Install Crafty requirements
+pip install -r requirements.txt
 
-# 9. Enable and start MineOS
+# Exit crafty user shell
+deactivate
+EOF
+
+# Create a systemd service to run Crafty
+cat >/etc/systemd/system/crafty.service <<EOF
+[Unit]
+Description=Crafty Controller Service
+After=network.target
+
+[Service]
+Type=simple
+User=crafty
+WorkingDirectory=/home/crafty/crafty
+ExecStart=/home/crafty/crafty/venv/bin/python3 /home/crafty/crafty/crafty.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload systemd and start Crafty
 systemctl daemon-reload
-systemctl enable mineos
-systemctl start mineos
+systemctl enable crafty
+systemctl start crafty
 
-echo "✅ MineOS should now be installed and running!"
-echo "🔗 Access it at: https://<your-server-ip>:8443"
+echo "🎉 Crafty Controller installed! Open your panel at: http://your-server-ip:8000"
